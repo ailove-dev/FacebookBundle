@@ -1,7 +1,6 @@
 <?php
 
 /**
- * This file is part of the "AiloveOliport" package.
  *
  * Copyright Ailove company <info@ailove.ru>
  *
@@ -13,7 +12,7 @@ use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use FOS\UserBundle\Entity\UserManager;
-use Ailove\UserBundle\Entity\User;
+use Application\Sonata\UserBundle\Entity\User;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\DependencyInjection\Container;
 use \BaseFacebook;
@@ -21,8 +20,6 @@ use \FacebookApiException;
 
 /**
  * Facebook user provider.
- *
- * @author Dmitry Bykadorov <dmitry.bykadorov@gmail.com>
  */
 class FacebookUserProvider implements UserProviderInterface
 {
@@ -85,7 +82,7 @@ class FacebookUserProvider implements UserProviderInterface
      *
      * @param integer $fbId Facebook user ID
      *
-     * @return \Ailove\UserBundle\Entity\User
+     * @return User
      *
      * @throws \Exception
      */
@@ -103,13 +100,15 @@ class FacebookUserProvider implements UserProviderInterface
      *
      * @param string $username Facebook uid
      *
-     * @return \Ailove\UserBundle\Entity\User
+     * @return User
      *
      * @throws \Symfony\Component\Security\Core\Exception\UsernameNotFoundException
      */
     public function loadUserByUsername($username)
     {
-        /** @var $user \Ailove\UserBundle\Entity\User */
+        /**
+         * @var User $user
+         */
         $user = $this->findUserByFbId($username);
         try {
             $fbdata = $this->facebook->api('/me');
@@ -122,19 +121,15 @@ class FacebookUserProvider implements UserProviderInterface
 
             if (!empty($fbdata)) {
 
+                $fbId = $fbdata['id'];
 
-                $username = $fbdata['id'] . '@facebook.com';
-                $user = $this->userManager->createUser();
-                $user->setFirstname($fbdata['first_name']);
-                $user->setLastname($fbdata['last_name']);
+                $user = new User();
                 $user->setEnabled(true); // Temporary enable user - to access connect page
                 $user->setPassword('');
-                $user->setFacebookData($fbdata);
-                $user->setEmail($username);
+                $user->setUsername($fbId);
+                $user->setEmail($fbId . '@facebook.com');
+                $user->setFacebookUid($fbId);
                 $user->addRole(User::ROLE_FACEBOOK_USER);
-                $user->setFacebookUid($fbdata['id']);
-                $user->setUsername($username);
-                $user->setAvatar('https://graph.facebook.com/' . $user->getFacebookUid() . '/picture?width=72&height=72');
                 $this->userManager->updateUser($user, false);
             }
         }
@@ -147,8 +142,6 @@ class FacebookUserProvider implements UserProviderInterface
             $user->setFacebookName($fbdata['name']);
         }
 
-//        var_dump($user);die;
-
         return $user;
     }
 
@@ -157,13 +150,13 @@ class FacebookUserProvider implements UserProviderInterface
      *
      * @param \Symfony\Component\Security\Core\User\UserInterface $user User instnace
      *
-     * @return \Ailove\UserBundle\Entity\User|\FOS\UserBundle\Model\UserInterface
+     * @return User|\FOS\UserBundle\Model\UserInterface
      *
      * @throws \Symfony\Component\Security\Core\Exception\UnsupportedUserException
      */
     public function refreshUser(UserInterface $user)
     {
-        /** @var $user \Ailove\UserBundle\Entity\User */
+        /** @var User $user */
         if (!$this->supportsClass(get_class($user)) || !$user->getFacebookUid()) {
             throw new UnsupportedUserException(sprintf('Instances of "%s" are not supported.', get_class($user)));
         }
