@@ -18,10 +18,9 @@ class FacebookController extends Controller
          */
         $fbApi = $this->get('fos_facebook.api');
 
+        $route = $this->container->getParameter('facebook.redirect_route');
 
-
-
-        return new \Symfony\Component\HttpFoundation\RedirectResponse($fbApi->getLoginUrl(array('redirect_uri' => $this->generateUrl('_security_check', array(), true))));
+        return new \Symfony\Component\HttpFoundation\RedirectResponse($fbApi->getLoginUrl(array('redirect_uri' => $this->generateUrl($route, array(), true))));
     }
 
     public function connectAction()

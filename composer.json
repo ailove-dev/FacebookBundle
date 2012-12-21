@@ -11,6 +11,7 @@
     ],
     "require": {
         "php": ">=5.3.1",
+        "ailove-dev/abstract-social-bundle": "dev-master",
         "friendsofsymfony/facebook-bundle": "dev-master"
     },
     "autoload": {
