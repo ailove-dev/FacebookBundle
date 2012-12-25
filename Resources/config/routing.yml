@@ -1,15 +1,10 @@
-_security_check:
-    pattern:  /facebook/login_check/
-    defaults: { _controller: AiloveFacebookBundle:Facebook:index }
-_security_logout:
-    pattern:  /profile/logout
-    defaults: { _controller: AiloveFacebookBundle:Facebook:index }
-
-fb_login:
-    pattern:  /fb/login
-    defaults: { _controller: AiloveFacebookBundle:Facebook:login }
-fb_connect:
-    pattern:  /fb/conect
-    defaults: { _controller: AiloveFacebookBundle:Facebook:connect }
-
+_fb_security_check:
+    pattern: /login_check/
+    defaults: { _controller: 'FOSUserBundle:FOSUserSecurity:check' }
+_fb_connect:
+    pattern: /login/connect/
+    defaults: { _controller: 'AiloveFacebookBundle:Social:connect' }
+_fb_login:
+    pattern: /login/
+    defaults: { _controller: 'AiloveFacebookBundle:Social:login' }
 

@@ -1,12 +1,43 @@
 parameters:
-#    ailove_facebook.example.class: Ailove\FacebookBundle\Example
+  fb.class.entry_point: Ailove\FacebookBundle\Security\Firewall\FBEntryPoint
+  fb.class.proxy:   Ailove\FacebookBundle\Service\FBOauthSessionProxy
+  fb.class.api:     Ailove\FacebookBundle\Classes\FacebookApi
+  fb.access_token_url: https://graph.facebook.com/oauth/access_token
+  fb.dialog_url: https://www.facebook.com/dialog/oauth
+  fb.scope: 'publish_actions,publish_stream,read_stream,read_friendlists'
+  fb.cookie: ~
+  fb.domain: ~
 
 services:
-#    ailove_facebook.example:
-#        class: %ailove_facebook.example.class%
-#        arguments: [@service_id, "plain_value", %parameter%]
+  fb.oauth.proxy:
+    class: %fb.class.proxy%
+    arguments:
+      - { accessTokenUrl: %fb.access_token_url%, dialogUrl: %fb.dialog_url%, redirectRoute: %fb.redirect_route% , scope: %fb.scope%, serviceContainer: @service_container }
+    calls:
+      - [ setContainer, [ '@service_container' ] ]
+      - [ setSdk, [ '@fb.api' ] ]
 
-  fos.facebook.user:
-      id: fos.facebook.user
-      class: Ailove\FacebookBundle\Security\Facebook\User\FacebookUserProvider
-      arguments: [@fos_facebook.api, @fos_user.user_manager, @validator, @service_container]
+  fb.api:
+    class: %fb.class.api%
+    arguments:
+      [{appId: %fb.app_id%, secret: %fb.app_secret%, cookie: %fb.cookie%, domain: %fb.domain%  } ]
+
+  fb.user.provider:
+    class: Ailove\FacebookBundle\Security\User\FBUserProvider
+    arguments: [ '@fb.oauth.proxy', '@fos_user.user_manager']
+
+  fb.auth.provider:
+      class: 'Ailove\FacebookBundle\Security\Authentication\Provider\FBProvider'
+      arguments: [ '@fb.oauth.proxy', '@fb.user.provider', '@security.user_checker' ]
+
+  fb.firewall.listener:
+      class: 'Ailove\FacebookBundle\Security\Firewall\FBListener'
+      parent: security.authentication.listener.abstract
+      abstract: true
+
+  fb.security.authentication.entry_point:
+      class: %fb.class.entry_point%
+      arguments: [ @service_container ]
+      tags:
+        -  { name: social.entryPoint }
+
